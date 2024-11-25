@@ -2,14 +2,14 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include"Header.h"
+#include"vehicles.h"
 using namespace std;
 struct Vertex {
     char n;
     int a;             
     float weight;      
     Vertex* next;
-    vehicle_list* cars;
+    vehicle_list cars;
 
     Vertex() {
         next = nullptr;
@@ -22,6 +22,9 @@ struct Vertex {
         this->weight = b;
         next = nullptr;
     }
+	void addCar(vehicles car) {
+		cars.add_vehicle(car);
+	}
 };
 class List {
     Vertex* head;  
@@ -61,11 +64,37 @@ public:
 };
 
 class WeightedGraph {
+public:
     int n;             
     List** adjacency_list;
 
     int hash(char c) {
         return c % 65;
+    }
+	void load_vehicles() {
+		fstream read("vehicles.csv");
+        string l;
+        bool head = true;
+        while (getline(read, l)) {
+            if (head) {
+                head = false;
+                continue;
+            }
+			stringstream ss(l);
+            char  st, en;
+			string id;
+            string token;
+            getline(ss, token, ',');
+            id = token;
+            getline(ss, token, ',');
+            st = token[0];
+			getline(ss, token, ',');
+			en = token[0];
+			int start = st - 'A';
+			int end = en - 'A';
+            vehicles temp(st,en,id);
+			adjacency_list[start]->getHead()->addCar(temp);
+        }
     }
     void load_roads() {
         fstream read("road_network.csv");
@@ -126,6 +155,7 @@ public:
         }
         return max % 64;
     }
+    
     WeightedGraph() {
         this->n = count_vertex();
         adjacency_list = new List * [n];
@@ -134,6 +164,7 @@ public:
             adjacency_list[i]->insert(i, 0);
         }
         load_roads();
+        load_vehicles();
     }
     void display() {
         cout << "Road network\n";
@@ -146,7 +177,9 @@ public:
                 cout << "(" << curr->n << ", " << curr->weight << ") -> ";
                 curr = curr->next;
             }
-            cout << "NULL\n";
+            cout << "\nCars present:\n";
+            curr = adjacency_list[i]->getHead();
+			curr->cars.display_vehicles();
         }
     }
     
