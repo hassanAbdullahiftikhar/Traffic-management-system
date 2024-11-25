@@ -1,14 +1,16 @@
-//Hello
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include"Header.h"
 using namespace std;
 struct Vertex {
     char n;
     int a;             
     float weight;      
-    Vertex* next;        
+    Vertex* next;
+    vehicle_list* cars;
+
     Vertex() {
         next = nullptr;
         a = 0;
@@ -61,22 +63,9 @@ public:
 class WeightedGraph {
     int n;             
     List** adjacency_list;
+
     int hash(char c) {
         return c % 65;
-    }
-    int count_vertex() {
-        fstream read("road_network.csv");
-        int c = 0;
-        string l;
-        bool head = true;
-        while (getline(read, l)) {
-            if (head) {
-                head = false;
-                continue;
-            }
-            c++;
-        }
-        return c;
     }
     void load_roads() {
         fstream read("road_network.csv");
@@ -87,12 +76,10 @@ class WeightedGraph {
                 head = false;
                 continue;
             }
-
             stringstream ss(l);
             char vertex, nei;
             float weight;
             string token;
-
             getline(ss, token, ',');
             vertex = token[0];
 
@@ -109,15 +96,47 @@ class WeightedGraph {
         }
     }
 public:
+    int count_vertex() {
+        fstream read("road_network.csv");
+        string l;
+        bool head = true;
+        char max = ' ';
+        while (getline(read, l)) {
+            if (head) {
+                head = false;
+                continue;
+            }
+
+            stringstream ss(l);
+            char vertex, nei;
+            string token;
+
+            getline(ss, token, ',');
+            vertex = token[0];
+            if (vertex > max) {
+                max = vertex;
+            }
+
+            getline(ss, token, ',');
+            nei = token[0];
+            if (nei > max) {
+                max = nei;
+            }
+
+        }
+        return max % 64;
+    }
     WeightedGraph() {
         this->n = count_vertex();
         adjacency_list = new List * [n];
         for (int i = 0; i < n; i++) {
             adjacency_list[i] = new List();
+            adjacency_list[i]->insert(i, 0);
         }
         load_roads();
     }
     void display() {
+        cout << "Road network\n";
         for (int i = 0; i < n; i++) {
             char v = 'A';
             v += i;
@@ -130,23 +149,7 @@ public:
             cout << "NULL\n";
         }
     }
-    /*void dijkstras(char st,char end) {
-        List path;
-        int start = hash(st);
-        int cd = 0;
-        path.insert(adjacency_list[start]->getHead()->a,
-            adjacency_list[start]->getHead()->weight);
-        Vertex* curr = path.getHead();
-        Vertex* p;
-        int d = 999999;
-        while (curr != nullptr) {
-            if (curr->weight < d) {
-                p = curr;
-                d = cd + curr->weight;
-            }
-            curr = curr->next;
-        }
-    }*/
+    
     ~WeightedGraph() {
         for (int i = 0; i < n; i++) {
             Vertex* curr = adjacency_list[i]->getHead();
