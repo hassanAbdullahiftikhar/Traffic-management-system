@@ -1,0 +1,257 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+using namespace std;
+
+class vertex {
+public:
+    float weight;
+    int value;
+    char name;
+    vertex* next;
+
+    vertex(int value = 0, float weight = 999) {
+        this->weight = weight;
+        this->value = value;
+        this->name = value + 65; 
+        next = nullptr;
+    }
+
+    float get_weight() {
+        return weight;
+    }
+
+    int get_val() {
+        return value;
+    }
+
+    void set_weight(float weight) {
+        this->weight = weight;
+    }
+
+    void set_val(int value) {
+        this->value = value;
+        name = value + 65; 
+    }
+
+    friend class adj_list;
+    friend class min_heap;
+};
+
+class adj_list {
+    vertex* head;
+    vertex* tail;
+
+public:
+    adj_list() {
+        head = tail = nullptr;
+    }
+
+    void add_at_end(int value, float weight) {
+        vertex* new_vertex = new vertex(value, weight);
+        if (!head) {
+            head = tail = new_vertex;
+        } else {
+            new_vertex->next = nullptr;
+            tail->next = new_vertex;
+            tail = new_vertex;
+        }
+    }
+
+    vertex*& get_head() {
+        return head;
+    }
+
+    void print() {
+        vertex* p = head;
+        while (p) {
+            if (p->next != nullptr)
+                cout << p->name << "(" << p->weight << ") -> ";
+            else
+                cout << p->name << "(" << p->weight << ") -> NULL" << endl;
+            p = p->next;
+        }
+    }
+
+    friend class w_graph;
+};
+
+
+
+class min_heap {
+public:
+    vertex* front;
+
+    min_heap() {
+        front = nullptr;
+    }
+
+    void enqueue(int value, int dist) {
+        vertex* new_vertex = new vertex(value, dist);
+
+        if (front == nullptr || front->get_weight() > new_vertex->get_weight()) {
+            new_vertex->next = front;
+            front = new_vertex;
+        }
+        else {
+            vertex* current = front;
+            while (current->next != nullptr && current->next->get_weight() <= new_vertex->get_weight()) {
+                current = current->next;
+            }
+
+            new_vertex->next = current->next;
+            current->next = new_vertex;
+        }
+    }
+
+    vertex* dequeue() {
+        if (!front)
+            return nullptr;
+        else {
+            vertex* p = front;
+            front = front->next;
+            p->next = nullptr;
+            return p;
+        }
+    }
+};
+
+
+
+class w_graph {
+    public:
+    int size;
+    adj_list** vertex_list;
+
+    int count_vertex() {
+        fstream read("road_network.csv");
+        int c = 0;
+        string l;
+        bool head = true;
+        while (getline(read, l)) {
+            if (head) {
+                head = false;
+                continue;
+            }
+            c++;
+        }
+        return c + 1; 
+    }
+
+
+    void load_roads() {
+        fstream read("road_network.csv");
+        string l;
+        bool head = true;
+        while (getline(read, l)) {
+            if (head) {
+                head = false;
+                continue;
+            }
+
+            stringstream ss(l);
+            char vertex, nei;
+            float weight;
+            string token;
+
+            getline(ss, token, ',');
+            vertex = token[0];
+
+            getline(ss, token, ',');
+            nei = token[0];
+
+            getline(ss, token, ',');
+            weight = stof(token);
+
+            int v_idx = vertex - 'A'; 
+            int n_idx = nei - 'A';  
+
+            vertex_list[v_idx]->add_at_end(n_idx, weight);
+        }
+    }
+
+public:
+    w_graph() {
+        this->size = count_vertex(); 
+        vertex_list = new adj_list*[size];
+        for (int i = 0; i < size; i++) {
+            vertex_list[i] = new adj_list();
+        }
+        load_roads();
+    }
+
+    ~w_graph() {
+        for (int i = 0; i < size; i++) {
+            delete vertex_list[i];
+        }
+        delete[] vertex_list;
+    }
+
+    void display() {
+        for (int i = 0; i < size; i++) {
+            cout << "Vertex " << char(i + 65) << ": "; 
+            if (vertex_list[i]->get_head() == nullptr) {
+                cout << "NULL" << endl;  
+            } else {
+                vertex_list[i]->print();
+            }
+        }
+    }
+      void shortest_path(int source_vertex) {
+    int dist[size];
+    bool flag[size] = {false};
+
+   
+    for (int i = 0; i < size; ++i) {
+        dist[i] = 999;
+    }
+
+    min_heap heaper;
+
+
+    dist[source_vertex] = 0;
+    heaper.enqueue(source_vertex, 0);
+
+    while (heaper.front != nullptr) {
+        vertex* current_source = heaper.dequeue();
+        int current_val = current_source->get_val();
+
+        if (flag[current_val] == true) {
+            continue; 
+        }
+
+        flag[current_val] = true;  
+
+        vertex* adjacent_vertex = vertex_list[current_val]->get_head();
+        while (adjacent_vertex != nullptr) {
+            int adj_val = adjacent_vertex->get_val();
+            float weight = adjacent_vertex->get_weight();
+
+         
+            if (dist[current_val] + weight < dist[adj_val]) {
+                dist[adj_val] = dist[current_val] + weight;
+                heaper.enqueue(adj_val, dist[adj_val]);  
+            }
+
+            adjacent_vertex = adjacent_vertex->next;
+        }
+    }
+
+  
+    for (int i = 0; i < size; i++) {
+        cout << "Distance to vertex " << char(i + 65) << " is: " << dist[i] << endl;
+    }
+}
+
+};
+
+int main() {
+   
+    w_graph obj;
+    obj.display();
+
+    obj.shortest_path(2);
+
+    return 0;
+}
