@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include"vehicles.h"
+#include"trafficsignal.h"
 using namespace std;
 struct Vertex {
     char n;
@@ -10,6 +11,7 @@ struct Vertex {
     float weight;      
     Vertex* next;
     vehicle_list cars;
+    signal s;
 
     Vertex() {
         next = nullptr;
