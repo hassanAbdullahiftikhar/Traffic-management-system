@@ -1,0 +1,370 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include "vehicle.cpp"
+using namespace std;
+
+
+
+class Traffic {
+    public:
+    int green_time ; 
+    vehicle_list v_l ;
+    char intersect ; 
+    int vehicle_count;
+
+    Traffic(char intersect ='l')
+    {
+        green_time = 0 ;
+        this-> intersect = intersect;
+
+        
+    }
+      void determine_traffic() {
+
+        ifstream file("vehicles.csv");
+        int count = 0 ;
+
+        if (!file) {
+            cout << "Error" << endl;
+            return;
+        }
+
+        string line;
+        while (getline(file, line)) {
+            stringstream ss(line);
+            string vehicle_name, start, end;
+
+            getline(ss, vehicle_name, ',');
+            getline(ss, start, ',');
+            getline(ss, end, ',');
+
+            if (count != 0) {
+                char start_char = start[0];
+                char end_char = end[0];
+                if (intersect==start_char)
+                v_l.add_vehicle_2(vehicle_name , start_char , end_char) ;
+            }
+            count++;
+        }
+
+        file.close();
+    }
+
+void display_traffic()
+{
+    v_l.display_vehicles();
+}
+void set_green_light(int value)
+{
+    green_time = value ;
+}
+void set_green_light_by_vehicle_count()
+{
+    green_time =vehicle_count* 5 ;
+}
+int get_green_light()
+{
+    return green_time;
+}
+string move_car(char destination)
+{
+   return v_l.pop_car(destination);
+}
+
+bool no_traffic()
+{
+    if (!v_l.head)
+    return true;
+    else
+    return false;
+}
+
+};
+
+
+
+
+
+
+
+
+class intersection {
+public:
+    char name;
+    int  green_time;
+    int no_of_vehicles;
+    intersection* next;
+    Traffic T ;
+
+    intersection(char name = 'L', int green_time = 0): T(name) {
+        this->name = name;
+        this->green_time = green_time;
+        this->no_of_vehicles = 0;
+        next = nullptr;
+        
+        T.determine_traffic();
+    }
+
+    void inc_vehicles(int val = 1) {
+        no_of_vehicles += val;
+    }
+
+ 
+    void adjust_green_time(int val) {
+        this->green_time = val;
+    }
+    int get_green_light()
+    {
+        return green_time;
+    }
+};
+
+class max_heap {
+public:
+    intersection* front;
+
+    max_heap() {
+        front = nullptr;
+    }
+
+    void enqueue(intersection* p) {
+        intersection* new_intersection = new intersection(p->name, p->green_time);
+        if (front == nullptr || front->no_of_vehicles < new_intersection->no_of_vehicles) {
+            new_intersection->next = front;
+            front = new_intersection;
+        }
+        else {
+            intersection* current = front;
+            while (current->next != nullptr && current->next->no_of_vehicles >= new_intersection->no_of_vehicles) {
+                current = current->next;
+            }
+
+            new_intersection->next = current->next;
+            current->next = new_intersection;
+        }
+    }
+
+    intersection* dequeue() {
+        if (!front)
+            return nullptr;
+        else {
+            intersection* p = front;
+            front = front->next;
+            p->next = nullptr;
+            return p;
+        }
+    }
+ void print() {
+        intersection* current = front;
+        while (current != nullptr) {
+            cout << "Intersection " << current->name << " Green Time: " << current->green_time
+                 << " Vehicles: " << current->no_of_vehicles << endl;
+            current = current->next;
+        }
+    }
+
+};
+
+
+
+
+
+
+class intersection_list {
+  
+ 
+     
+
+public:
+  intersection* head;
+    intersection_list() {
+        head = nullptr;
+      
+    }
+
+    void add_at_end(char name, int green_time) {
+        intersection* new_intersection = new intersection(name, green_time);
+
+        if (head == nullptr) {
+            head = new_intersection;
+        } else {
+            intersection* current = head;
+            while (current->next != nullptr) {
+                current = current->next;
+            }
+            current->next = new_intersection;
+        }
+    }
+
+    void display() {
+        intersection* current = head;
+        while (current != nullptr) {
+            cout << "Intersection " << current->name << " Green Time: " << current->green_time
+                 << " Vehicles: " << current->no_of_vehicles << endl;
+            current = current->next;
+        }
+    }
+
+    void find_and_inc_vehicles(char name) {
+        intersection* current = head;
+        while (current != nullptr) {
+            if (current->name == name) {
+                current->inc_vehicles();
+                return;
+            }
+            current = current->next;
+        }
+        cout << "Intersection " << name << " not found!" << endl;
+    }
+
+     void find_and_inc_green_time(char name,int val) {
+        intersection* current = head;
+        while (current != nullptr) {
+            if (current->name == name) {
+                current->adjust_green_time(val);
+                return;
+            }
+            current = current->next;
+        }
+        cout << "Intersection " << name << " not found!" << endl;
+    }
+
+
+    void read_intersections() {
+        ifstream file("traffic_signal_timings.csv");
+        int count = 0;
+
+        if (!file) {
+            cout << "Error" << endl;
+            return;
+        }
+
+        string line;
+        while (getline(file, line)) {
+            stringstream ss(line);
+            string name;
+            int green_time;
+
+            getline(ss, name, ',');
+            ss >> green_time;
+
+            if (count != 0) {
+                add_at_end(name[0], green_time);
+            }
+            count++;
+        }
+
+        file.close();
+        //display();
+    }
+
+  Traffic* get_traffic_by_name(char name) {
+        intersection* current = head;
+        while (current != nullptr) {
+            if (current->name == name) {
+                return &current->T;  
+            }
+            current = current->next;
+        }
+        
+        cout << "Intersection " << name << " not found!" << endl;
+        return nullptr; 
+    }
+
+void green_cal () {
+    max_heap queue;
+    intersection* p = head;
+    while (p) {  // Corrected condition
+        queue.enqueue(p);
+        p = p->next;
+    }
+
+    queue.print();
+}
+
+
+void move_traffic() {
+   
+    char path[] = {'A', 'B', 'C', 'D'};
+    int path_size = sizeof(path) / sizeof(path[0]);  
+    char dest = 'H';
+
+    
+    for (int i = 0; i < path_size - 1; ++i) {
+        char start = path[i];   
+        char end = path[i + 1]; 
+
+     
+        Traffic* T_start = get_traffic_by_name(start);
+        Traffic* T_end = get_traffic_by_name(end);
+
+        if (T_start == nullptr || T_end == nullptr) {
+            cout << "No such intersection found"<<endl;
+            return; 
+        }
+      
+
+
+        string id = T_start->move_car(dest); 
+        while (id != "no") {  
+          
+            T_end->v_l.add_vehicle_2(id, T_end->intersect, 'E');  
+
+       
+            id = T_start->move_car(end);
+        }
+
+       
+        T_end->display_traffic();
+    }
+
+    Traffic* T_final = get_traffic_by_name(dest);
+    if (T_final != nullptr) {
+        cout<<"final destination :traffic"<<endl;
+        T_final->display_traffic();  
+    }
+}
+
+
+};
+
+int main() {
+    intersection_list list;
+
+    list.read_intersections();
+    list.move_traffic();
+
+    return 0;
+}
+
+
+/*
+void determine_traffic() {
+        ifstream file("vehicles.csv");
+        int count = 0;
+
+        if (!file) {
+            cout << "Error !" << endl;
+            return;
+        }
+
+        string line;
+        while (getline(file, line)) {
+            stringstream ss(line);
+            string vehicle_name, start, end;
+
+            getline(ss, vehicle_name, ',');
+            getline(ss, start, ',');
+            getline(ss, end, ',');
+
+            if (count != 0) {
+                char start_char = start[0];
+                find_and_inc_vehicles(start_char);
+            }
+            count++;
+        }
+
+        file.close();
+    }*/
