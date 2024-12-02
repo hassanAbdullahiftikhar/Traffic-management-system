@@ -387,11 +387,11 @@ public:
                 adjacent_list = adjacency_list[min->ver_index];
             }
         }
-        for (int i = 0; i < size; i++)
-        {
-            cout << predecessor[i] << " ";
-        }
-        cout << endl;
+        //for (int i = 0; i < size; i++)
+        //{
+        //    cout << predecessor[i] << " ";
+        //}
+        //cout << endl;
        // distance.print_dist("", start, end);
 
         char path[26];
@@ -402,8 +402,6 @@ public:
         {
             while (current >=0 && current < size )
             {
-                cout << current << " ";
-                
                 path[path_index] = current + 65;
             	if (path[path_index-1]==start)
                     break;
