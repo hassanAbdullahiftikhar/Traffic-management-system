@@ -282,7 +282,7 @@ public:
         for (int i = 0; i < n; i++) {
             char v = 'A';
             v += i;
-			cout << "Green Time: " << adjacency_list[i]->getHead()->s.get_signal() << " seconds\n";
+			//cout << "Green Time: " << adjacency_list[i]->getHead()->s.get_signal() << " seconds\n";
             cout << "Vertex " << v<< ": ";
             Vertex* curr = adjacency_list[i]->getHead();
 			cout << "No of cars:" << adjacency_list[i]->getHead()->cars.no_cars() << "\n"; 
@@ -349,13 +349,50 @@ public:
         delete[] adjacency_list;
     }
 };
+class simulation_dashboard {
+    WeightedGraph* g;
+public:
+	simulation_dashboard(){
+		g = new WeightedGraph();
+    }
+    void menu() {
+        while (true) {
+            cout << "City traffic Network Simulation\n";
+            cout << "1.Display road network\n";
+            cout << "2.Display All possible paths\n";
+            cout << "3.Display Traffic signals\n";
+            cout << "4.Exit simulation\n";
+            int a;
+            cout << "enter choice";
+            cin>>a;
+            if (a == 1) {
+                g->display();
+            }
+			else if (a == 2) {
+				char st,en;
+                cout << "Enter start and end vertexes";
+                cin >> st;
+                cin >> en;
+				g->findAllPaths(st, en);
+            }
+            else if (a == 3) {
 
+            }
+            else{
+                break;
+            }
+
+        }
+    }
+};
 int main() {
-    WeightedGraph g;
-    g.display();
+    /*WeightedGraph g;
+    g.display();*/
 	//g.dijkstra('F','O');/*
 	//g.create_signal();
  //   g.display();*/
  //   g.findAllPaths('A', 'F');
+    simulation_dashboard s;
+	s.menu();
     return 0;
 }
