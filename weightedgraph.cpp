@@ -103,6 +103,9 @@ class WeightedGraph {
             int start = st - 'A';
             int end = en - 'A';
             vehicles temp(st, en, id);
+            string t="";
+            dijkstra(st, en,t);
+            temp.path = t;
             adjacency_list[start]->getHead()->addCar(temp);
         }
     }
@@ -118,13 +121,15 @@ class WeightedGraph {
         }
         return min_index;
     }
-    void printPath(int* prev, int vertex) {
+    void printPath(int* prev, int vertex,string &p) {
         if (prev[vertex] == -1) {
-            cout << char(vertex + 'A');
+            //cout << char(vertex + 'A');
+			p+=vertex + 'A';
             return;
         }
-        printPath(prev, prev[vertex]);
-        cout << " -> " << char(vertex + 'A');
+        printPath(prev, prev[vertex],p);
+        //cout << " -> " << char(vertex + 'A');
+		p += vertex + 'A';
     }
     void load_signal() {
         fstream read("traffic_signals.csv");
@@ -246,6 +251,10 @@ public:
     void findAllPaths(char start, char end) {
         int startIdx = start%65;
         int endIdx = end%65;
+        if (end < start) {
+            cout << "No possible paths";
+            return;
+        }
         bool* visited = new bool[n] {false};
         int* path = new int[n];
         int pathIndex = 0;
@@ -264,7 +273,7 @@ public:
             }
             Traffic t(vehicle_no, green);
             signals.add_traffic(t);
-        }
+        } 
         signals.display_traffic();
     }
 
@@ -286,7 +295,7 @@ public:
 			curr->cars.display_vehicles();
         }
     }
-    void dijkstra(char start,char end) {
+    void dijkstra(char start,char end,string &t) {
         int start_index = start - 'A';
         float* dist = new float[n];
         int* prev = new int[n];
@@ -320,9 +329,9 @@ public:
         }
 
         // Display the results
-        cout << "Shortest paths from vertex " << start << " to "<<end<<":\n";
-		printPath(prev, end%65);
-        cout <<":" << dist[end % 65];
+        //cout << "Shortest paths from vertex " << start << " to "<<end<<":\n";
+		printPath(prev, end%65,t);
+        //cout <<":" << dist[end % 65];
         delete[] dist;
         delete[] prev;
         delete[] visited;
@@ -343,10 +352,10 @@ public:
 
 int main() {
     WeightedGraph g;
-    //g.display();
-	g.dijkstra('F','O');/*
-	g.create_signal();
-    g.display();*/
-    g.findAllPaths('A', 'F');
+    g.display();
+	//g.dijkstra('F','O');/*
+	//g.create_signal();
+ //   g.display();*/
+ //   g.findAllPaths('A', 'F');
     return 0;
 }
