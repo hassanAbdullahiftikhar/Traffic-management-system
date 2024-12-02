@@ -26,7 +26,8 @@ struct adj_list_node {
 class adj_list {
     adj_list_node* head;  
 public:
-    adj_list() {
+    adj_list()
+	{
         head = nullptr;
     }
     adj_list(char alpha, int weight)
@@ -35,26 +36,6 @@ public:
     }
     adj_list_node* getHead() {
         return head;
-    }
-    adj_list_node* get_min(char end)
-    {
-        
-        adj_list_node* temp = head->next;
-        adj_list_node* min = head->next;
-        while (temp != nullptr)
-        {
-            if (temp->weight < min->weight)
-                min = temp;
-            if (temp->weight == min->weight)
-            {
-                if (temp->vertex == end)
-                {
-                    min = temp;
-                }
-            }
-            temp = temp->next;
-        }
-        return min;
     }
     void insert(int index, float weight) {
         if (head == nullptr) {
@@ -406,7 +387,11 @@ public:
                 adjacent_list = adjacency_list[min->ver_index];
             }
         }
-
+        for (int i = 0; i < size; i++)
+        {
+            cout << predecessor[i] << " ";
+        }
+        cout << endl;
        // distance.print_dist("", start, end);
 
         char path[26];
@@ -415,12 +400,15 @@ public:
         int current = end - 65; 
         if (current >= 0 && current < size)
         {
-            while (current != -1)
+            while (current >=0 && current < size )
             {
-                path[path_index++] = current + 65;
+                cout << current << " ";
+                
+                path[path_index] = current + 65;
             	if (path[path_index-1]==start)
                     break;
                 current = predecessor[current];
+                path_index++;
             }
             cout << "Shortest Path: ";
             for (int i = path_index - 1; i >= 0; i--)
