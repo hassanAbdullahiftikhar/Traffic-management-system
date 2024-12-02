@@ -29,18 +29,29 @@ public:
     adj_list() {
         head = nullptr;
     }
+    adj_list(char alpha, int weight)
+    {
+        head = new adj_list_node(alpha, weight);
+    }
     adj_list_node* getHead() {
         return head;
     }
     adj_list_node* get_min(char end)
     {
         
-        adj_list_node* temp = head;
-        adj_list_node* min = head;
+        adj_list_node* temp = head->next;
+        adj_list_node* min = head->next;
         while (temp != nullptr)
         {
             if (temp->weight < min->weight)
                 min = temp;
+            if (temp->weight == min->weight)
+            {
+                if (temp->vertex == end)
+                {
+                    min = temp;
+                }
+            }
             temp = temp->next;
         }
         return min;
@@ -64,12 +75,12 @@ public:
 struct dist_list_node
 {
     int distance;
-    char vertex;
+    int ver_index;
     dist_list_node* next;
-    dist_list_node(const int dist = 0 , const char vertex = '\0')
+    dist_list_node(const int dist = 0 , const int vertex = 0)
     {
         distance = dist;
-        this->vertex = vertex;
+        this->ver_index = vertex;
         next = nullptr;
     }
 };
@@ -77,8 +88,9 @@ struct dist_list_node
 
 class dist_list
 {
-    dist_list_node* head;
+   
 public:
+    dist_list_node* head;
     dist_list()
     {
         head = nullptr;
@@ -87,10 +99,10 @@ public:
     {
         return head;
     }
-    dist_list(const int size , char start)
+    dist_list(const int size , int start)
     {
        
-        head = new dist_list_node(numeric_limits<int>::max() , start);
+        head = new dist_list_node(numeric_limits<int>::max() , 0);
         dist_list_node* temp = head;
         for (int i = 0; i < size-1; i++)
         {
@@ -98,6 +110,47 @@ public:
             start += 1;
             temp->next = new dist_list_node(numeric_limits<int>::max() , start);
             temp = temp->next;
+        }
+    }
+    dist_list_node* get_min()
+    {
+        dist_list_node* temp = head;
+        dist_list_node* min = head;
+        while (temp != nullptr)
+        {
+            if (temp->distance < min->distance)
+            {
+                min = temp;
+            }
+            temp = temp->next;
+        }
+        return min;
+    }
+    void delete_node(int index)
+    {
+        if (head == nullptr)
+        {
+            return;
+        }
+        if (head->ver_index == index)
+        {
+            dist_list_node* temp = head;
+            head = head->next;
+            delete temp;
+            return;
+        }
+        else
+        {
+            dist_list_node* temp = head, * temp2 = head;
+            while (temp!=nullptr && temp->ver_index != index)
+            {
+                temp2 = temp;
+                temp = temp->next;
+            }
+            if (temp == nullptr)
+                return;
+            temp2->next = temp->next;
+            delete temp;
         }
     }
     void insert(const int distance = numeric_limits<int>::max(), const char vertex ='\0')
@@ -118,21 +171,50 @@ public:
             return;
         }
     }
+    int check_dup(int index)
+    {
+        dist_list_node* temp = head;
+        if (temp == nullptr)
+        {
+            return 0;
+        }
+        else
+        {
+            while (temp != nullptr)
+            {
+                if (temp->ver_index == index) {
+                    return 1;
+                }
+                temp = temp->next;
+            }
+        }
+    }
+     int is_empty()
+    {
+        return head == nullptr;
+    }
     void print(const char start)
     {
         dist_list_node* temp = head;
         cout << start;
         while (temp->next!= nullptr)
         {
-            cout << "->" << temp->vertex;
+            cout << "->" << temp->ver_index+65;
             temp = temp->next;
         }
-        cout << "->"<<temp->vertex << "   " << temp->distance << endl;
+        cout << "->"<<temp->ver_index+65 << "   " << temp->distance << endl;
     }
-    void print_dist(string path , char start , char end)
+    void print_dist(string path="", char start='\0' , char end = '\0')
     {
         dist_list_node* temp = head;
-        int index = 0;
+        while (temp != nullptr)
+        {
+
+            char ch = temp->ver_index + 'A';
+                cout << ch << "->" << temp->distance << endl;
+            temp = temp->next;
+        }
+        /*int index = 0;
         int index2 = 0;
         int check = 0;
         int dist = 0;
@@ -145,41 +227,28 @@ public:
             }
             temp = temp->next;
             index += 1;
-        }
-        cout << path << " " << dist;
-    }
-    void assign_weight(adj_list *&singly , char alpha)
-    {
-        adj_list_node* singly_node = singly->getHead();
-        dist_list_node* temp = head;
-        while (singly_node != nullptr)
-        {
-            temp = head;
-            int vertex = singly_node->vertex;
-            int weight = singly_node->weight;
-            for (int i = 0; i < vertex - 65; i++)
-            {
-                temp = temp->next;
-            }
-            temp->distance = weight;
-            temp->vertex = vertex;
-            singly_node = singly_node->next;
-        }
+        }if(dist!= numeric_limits<int>::max())
+            cout << path << " " << dist;*/
     }
 };
 
 
 
 
-class WeightedGraph {
+class WeightedGraph 
+{
     int size;             
     adj_list** adjacency_list;
-    int hash(char c) {
+public:
+
+    int hash(char c)
+    {
         return c % 65;
     }
-    int count_vertex() {
+    int count_vertex()
+    {
         fstream read;
-        read.open("exp.csv");
+        read.open("road_network.csv");
         int count = 0;
         char max_character= NULL;
         string line;
@@ -207,7 +276,7 @@ class WeightedGraph {
         return max_character %64;
     }
     void load_roads() {
-        fstream read("exp.csv");
+        fstream read("road_network.csv");
         string l;
         bool head = true;
         while (getline(read, l)) 
@@ -216,7 +285,6 @@ class WeightedGraph {
                 head = false;
                 continue;
             }
-
             stringstream ss(l);
             char vertex, nei;
             float weight;
@@ -242,11 +310,11 @@ public:
         this->size = count_vertex();
         adjacency_list = new adj_list * [size];
         for (int i = 0; i < size; i++) {
-            adjacency_list[i] = new adj_list();
+            adjacency_list[i] = new adj_list(i , 0);
         }
         load_roads();
     }
-    void display() {
+    void display() const {
         for (int i = 0; i < size; i++) 
         {
             char v = 'A';
@@ -261,107 +329,124 @@ public:
             cout << "NULL\n";
         }
     }
-
-
-    void dijkstras(char start, char end)
+    static int check_node(char start , char end , const dist_list_node *temp)
     {
-        string path;
-        dist_list distance(size , 'A');
-        distance.assign_weight(adjacency_list[start - 65 ] , start);
-        //distance.print_dist();
-        int min_node_weight = 0;
-        char min_node_vertex = '\0';
-        adj_list* adjacent_list = adjacency_list[start-65];
-        int index = 0;
-        path += start;
-        for (int i = 0; i < size-1-(start-65); i++)
+        int s_check = 0, e_check = 0;
+        start -= 65;
+        end -= 65;
+        while (temp != nullptr)
         {
-            
-            adj_list_node* min = adjacent_list->get_min(end);
-            path += "->";
-            path += min->vertex;
-
-            adjacent_list = adjacency_list[min->index];
-            min_node_weight += min->weight;
-            min_node_vertex = min->vertex;
-            adj_list_node* node_adj_list = adjacent_list->getHead();
-            while (node_adj_list != nullptr)
+            if (temp->ver_index == start)
             {
-                char vertex = node_adj_list->vertex;
-                int weight = node_adj_list->weight;
+                s_check = 1;
+            }
+            else if (temp->ver_index == end)
+            {
+                e_check = 1;
+            }
+            temp = temp->next;
+        }
+        if (s_check && e_check)
+            return 1;
+        else
+            return 0;
+    } 
+
+    int dijkstras(const char start, const char end)
+    {
+        dist_list distance(size, 0);   
+        dist_list queue;
+        int predecessor[26];  
+
+        for (int i = 0; i < size; i++) 
+        {
+            predecessor[i] = -1;
+        }
+
+        queue.insert(0, start - 65);
+        dist_list_node* min = queue.get_min();
+        int min_distance = min->distance;
+        int min_vertex_index = min->ver_index;
+        adj_list* adjacent_list = adjacency_list[min_vertex_index];
+        adj_list_node* adj_node = nullptr;
+        while (!(queue.is_empty()))
+        {
+            adj_node = adjacent_list->getHead();
+
+            while (adj_node != nullptr)
+            {
                 dist_list_node* temp = distance.get_head();
                 while (temp != nullptr)
                 {
-                    if (temp->vertex == vertex)
+                    if (temp->ver_index == adj_node->index)
                     {
-                        if (temp->distance > (min_node_weight+weight))
+                        if (temp->distance > (min_distance + adj_node->weight))
                         {
-                            temp->distance = min_node_weight + weight;
+                            temp->distance = min_distance + adj_node->weight;
+                            predecessor[temp->ver_index] = min->ver_index;  
+                            if (queue.check_dup(temp->ver_index))
+                            {
+                                queue.delete_node(temp->ver_index);
+                            }
+                            queue.insert(temp->distance, temp->ver_index);
                         }
                         break;
                     }
                     temp = temp->next;
                 }
-                node_adj_list = node_adj_list->next;
+                adj_node = adj_node->next;
+            }
+            queue.delete_node(min->ver_index);
+            min = nullptr;
+
+            if (!(queue.is_empty()))
+            {
+                min = queue.get_min();
+                min_distance = min->distance;
+                adjacent_list = adjacency_list[min->ver_index];
             }
         }
-        distance.print_dist(path , start , end);
-        
+
+       // distance.print_dist("", start, end);
+
+        char path[26];
+        int path_index = 0;
+        int shortest_dist = 0;
+        int current = end - 65; 
+        if (current >= 0 && current < size)
+        {
+            while (current != -1)
+            {
+                path[path_index++] = current + 65;
+            	if (path[path_index-1]==start)
+                    break;
+                current = predecessor[current];
+            }
+            cout << "Shortest Path: ";
+            for (int i = path_index - 1; i >= 0; i--)
+            {
+                cout << path[i];
+                if (i != 0) cout << " -> ";
+            }
+            dist_list_node* temp2 = distance.get_head();
+            while (temp2 != nullptr)
+            {
+                if (temp2->ver_index == end - 65)
+                {
+                    cout << ": " << temp2->distance << endl;
+                    shortest_dist = temp2->distance;
+                    break;
+                }
+                temp2 = temp2->next;
+            }
+        }
+        else
+        {
+            cout << "End node (" << end << ") is out of valid range." << endl;
+        }
+        return shortest_dist;
     }
 
-
-    /*void dijkstras(char start, char end)
-    {
-        if (start == end)
-            return;
-        int index = start - 65;
-        int weight = 0;
-        char vertex = '\0';
-        int pre_weight = weight;
-        if (index > size)
-            return;
-        dist_list distance , visited;
-        adj_list* singly_list = nullptr;
-        for (int i = index; vertex!=end ;)
-        {
-            singly_list = adjacency_list[i];
-            if (singly_list->getHead() == nullptr)
-            {
-                cout << "Node Do Not Exists\n";
-                return;
-            }
-            adj_list_node* min = singly_list->get_min(end);
-            weight = min->weight;
-            vertex = min->vertex;
-            weight += pre_weight;
-            distance.insert(weight , vertex);
-            if (min->vertex == end)
-                break;
-            pre_weight = weight;
-            i = vertex - 65;
-            visited.insert(0 , vertex);
-        }
-        distance.print(start);
-    }*/
-
-
-    /*void dijkstras(char st,char end) {
-        List path;
-        int start = hash(st);
-        int cd = 0;
-        path.insert(adjacency_list[start]->getHead()->a,
-            adjacency_list[start]->getHead()->weight);
-        Vertex* curr = path.getHead();
-        Vertex* p;
-        int d = 999999;
-        while (curr != nullptr) {
-            if (curr->weight < d) {
-                p = curr;
-                d = cd + curr->weight;
-            }
-            curr = curr->next;
-        }
-    }*/
     ~WeightedGraph() {
         for (int i = 0; i < size; i++) {
             adj_list_node* curr = adjacency_list[i]->getHead();
@@ -374,15 +459,19 @@ public:
         }
         delete[] adjacency_list;
     }
+    int get_size() const 
+    {
+        return size;
+    }
 };
 
-int main() {
+int main() 
+{
     WeightedGraph g;
+    int size = g.get_size();
+    dist_list  distance(size , 'A');
+    g.dijkstras('F', 'O');
+    //distance.print_dist("  " , 'A', 'H');
     //g.display();
-    /*int maxValue = numeric_limits<int>::max();
-    std::cout << "The maximum value for int is: " << maxValue << std::endl;*/
-    g.dijkstras('C', 'F');
-    //dist_list d(5);
-    //d.print_dist();
     return 0;
 }
