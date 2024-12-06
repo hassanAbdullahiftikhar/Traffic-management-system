@@ -118,7 +118,7 @@ public:
     void print() {
         blocked_edge_node* current = head;
         while (current) {
-            std::cout << current->get_name() << " (" << current->get_status() << ") -> ";
+            cout << current->get_name() << " (" << current->get_status() << ") -> ";
             current = current->next;
         }
       
@@ -425,9 +425,11 @@ void load_road_closures() {
         
             int st_index = st - 'A';
             int en_index = en - 'A';   
+            
             Vertex* start_vertex = adjacency_list[st_index]->getHead();
             Vertex* end_vertex = adjacency_list[en_index]->getHead();
-
+           
+            if (adjacency_list[st_index]->find(en))
             start_vertex->block_roads->insert_at_end(en,status);
           
            // cout<<"intersecton1:"<<st <<" intersection2:"<<en <<" status:"<<status;
@@ -472,6 +474,34 @@ void block_certain_road() {
         cout << "road hi nai wahan sy salay"<<endl;
     }
 }
+void clear_certain_road()
+{
+     char start, end;
+    cout << "Enter the road to clear\n" << "Start: ";
+    cin >> start;
+    cout << "End: ";
+    cin >> end;
+
+    Vertex* start_vertex = adjacency_list[start-'A']->getHead();
+
+    Vertex* road = adjacency_list[start-'A']->getHead();
+    bool is_adjacent = false;
+    while (road != nullptr) {
+        if (road->n == end) {
+            is_adjacent = true;
+            break;
+        }
+        road = road->next;
+    }
+
+    if (is_adjacent) {
+        start_vertex->block_roads->delete_by_value(end);
+       
+    } else {
+        cout << "road hi nai wahan sy salay"<<endl;
+    }
+}
+
 
 
     WeightedGraph() {
@@ -561,7 +591,7 @@ void block_certain_road() {
             int v = neighbor->a; // Neighbor vertex
             float weight = neighbor->weight;
 
-            // Check if the road between u and v is blocked
+         
             bool road_blocked = adjacency_list[u]->getHead()->block_roads->find(neighbor->n);
 
             if (!visited[v] && !road_blocked && dist[u] + weight < dist[v]) {
@@ -634,14 +664,15 @@ int main() {
    g.display();
    string aa=" " ;
    string bb=" " ; 
-	g.dijkstra('A','F',aa);
+	g.dijkstra('A','D',aa);
       cout<<aa<<endl;
    g.load_road_closures();
    
    g.show_blocked_roads();
    g.block_certain_road();
-   g.dijkstra('A','F',bb);
-      cout<<bb<<endl;
+
+    g.clear_certain_road();
+    g.show_blocked_roads();
 
    
 
