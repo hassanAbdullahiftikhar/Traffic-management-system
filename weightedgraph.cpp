@@ -4,6 +4,7 @@
 #include <string>
 #include"vehicles.h"
 #include"trafficsignal.h"
+#include"congestion.h"
 using namespace std;
 
 struct Vertex {
@@ -27,9 +28,6 @@ struct Vertex {
 	void addCar(vehicles car) {
 		cars.add_vehicle(car);
 	}
-};
-class stack {
-
 };
 class List {
     Vertex* head;
@@ -72,8 +70,12 @@ class WeightedGraph {
     int n;
     List** adjacency_list;
     traffic_priority_queue signals;
+    congestion_heap *h;
     int hash(char c) {
         return c % 65;
+    }
+    void relieve_intersection(char v) {
+
     }
     void printPossiblePaths(int* path, int pathIndex,int w) {
         for (int i = 0; i < pathIndex; i++) {
@@ -244,9 +246,14 @@ public:
             adjacency_list[i] = new List();
             adjacency_list[i]->insert(i, 0);
         }
+        h = new congestion_heap(n);
         load_roads();
         load_vehicles();
         load_signal();
+        for (int i = 0; i < n; i++) {
+            road c(adjacency_list[i]->getHead()->n, adjacency_list[i]->getHead()->cars.no_cars());
+            h->insert_car(c);
+        }
     }
     void findAllPaths(char start, char end) {
         int startIdx = start%65;
@@ -262,6 +269,9 @@ public:
         findAllPathsUtil(startIdx, endIdx, visited, path, pathIndex,w);
         delete[] visited;
         delete[] path;
+    }
+    void display_congestion() {
+        h->display_congestion_levels();
     }
     void create_signal() {
         for (int i = 0; i < n; i++) {
@@ -294,6 +304,7 @@ public:
             curr = adjacency_list[i]->getHead();
 			curr->cars.display_vehicles();
         }
+        h->display_congestion_levels();
     }
     void dijkstra(char start,char end,string &t) {
         int start_index = start - 'A';
@@ -361,12 +372,15 @@ public:
             cout << "1.Display road network\n";
             cout << "2.Display All possible paths\n";
             cout << "3.Display Traffic signals\n";
-            cout << "4.Exit simulation\n";
+            cout << "4.Display Congestion Levels\n";
+            cout << "5.Exit simulation\n";
+
             int a;
             cout << "enter choice";
             cin>>a;
             if (a == 1) {
                 g->display();
+               
             }
 			else if (a == 2) {
 				char st,en;
@@ -378,6 +392,9 @@ public:
             else if (a == 3) {
 
             }
+            else if (a == 4) {
+                g->display_congestion();
+            }
             else{
                 break;
             }
@@ -386,9 +403,7 @@ public:
     }
 };
 int main() {
-    /*WeightedGraph g;
-    g.display();*/
-	//g.dijkstra('F','O');/*
+   /* WeightedGraph g;*/
 	//g.create_signal();
  //   g.display();*/
  //   g.findAllPaths('A', 'F');
