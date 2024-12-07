@@ -1,413 +1,111 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include"vehicles.h"
-#include"trafficsignal.h"
-#include"congestion.h"
-using namespace std;
+struct cong_level {
+    int no_cars;
+    char level;
 
-struct Vertex {
-    char n;
-    int a;             
-    float weight;      
-    Vertex* next;
-    vehicle_list cars;
-    signal s;
-    Vertex() {
-        next = nullptr;
-        a = 0;
-        weight = 0.0;
+    cong_level(int n, char l) {
+        no_cars = n;
+        level = l;
     }
-    Vertex(int a, float b) {
-        this->a = a;
-        n = a + 65;
-        this->weight = b;
-        next = nullptr;
-    }
-	void addCar(vehicles car) {
-		cars.add_vehicle(car);
-	}
-};
-class List {
-    Vertex* head;
-public:
-    List() {
-        head = nullptr;
-    }
-    Vertex* getHead() {
-        return head;
-    }
-    Vertex* getnearest() {
-        if (head == nullptr) return nullptr; 
 
-        Vertex* curr = head;
-        Vertex* nearest = head;
-
-        while (curr != nullptr) {
-            if (curr->weight < nearest->weight) {
-                nearest = curr;
-            }
-            curr = curr->next;
-        }
-        return new Vertex(nearest->a,nearest->weight); 
-    }
-    void insert(int a, float b) {
-        if (head == nullptr) {
-            head = new Vertex(a, b);
-        }
-        else {
-            Vertex* curr = head;
-            while (curr->next != nullptr) {
-                curr = curr->next;
-            }
-            curr->next = new Vertex(a, b);
-        }
+    cong_level() {
+        no_cars = 0;
+        level = ' ';
     }
 };
 
-class WeightedGraph {
-    int n;
-    List** adjacency_list;
-    traffic_priority_queue signals;
-    congestion_heap *h;
-    int hash(char c) {
-        return c % 65;
+class congestion_heap {
+    int n;  
+    cong_level* cars = nullptr;
+    int index = 1;
+    int left_c(int i) {
+        return 2 * i;
     }
-    void relieve_intersection(char v) {
 
+    int right_c(int i) {
+        return 2 * i + 1;
     }
-    void printPossiblePaths(int* path, int pathIndex,int w) {
-        for (int i = 0; i < pathIndex; i++) {
-            cout << char(path[i] + 'A') << "-> ";
-        }
-        cout <<":" << w << endl;
+
+    int parent(int i) {
+        return i / 2;
     }
-    void load_vehicles() {
-        fstream read("vehicles.csv");
-        string l;
-        bool head = true;
-        while (getline(read, l)) {
-            if (head) {
-                head = false;
-                continue;
+    void heapify_down() {
+        int i = 1;
+        while (left_c(i) < index) {
+            int largest = i; 
+            int left = left_c(i);
+            int right = right_c(i);
+            if (left < index && cars[left].no_cars > cars[largest].no_cars) {
+                largest = left;
             }
-            stringstream ss(l);
-            char  st, en;
-            string id;
-            string token;
-            getline(ss, token, ',');
-            id = token;
-            getline(ss, token, ',');
-            st = token[0];
-            getline(ss, token, ',');
-            en = token[0];
-            int start = st - 'A';
-            int end = en - 'A';
-            vehicles temp(st, en, id);
-            string t="";
-            dijkstra(st, en,t);
-            temp.path = t;
-            adjacency_list[start]->getHead()->addCar(temp);
-        }
-    }
-    int mindistance(float* dist, bool* visited) {
-        float min = INFINITY;
-        int min_index = -1;
-
-        for (int i = 0; i < n; i++) {
-            if (!visited[i] && dist[i] < min) {
-                min = dist[i];
-                min_index = i;
+            if (right < index && cars[right].no_cars > cars[largest].no_cars) {
+                largest = right;
             }
-        }
-        return min_index;
-    }
-    void printPath(int* prev, int vertex,string &p) {
-        if (prev[vertex] == -1) {
-            //cout << char(vertex + 'A');
-			p+=vertex + 'A';
-            return;
-        }
-        printPath(prev, prev[vertex],p);
-        //cout << " -> " << char(vertex + 'A');
-		p += vertex + 'A';
-    }
-    void load_signal() {
-        fstream read("traffic_signals.csv");
-        string l;
-        bool head = true;
-        while (getline(read, l)) {
-            if (head) {
-                head = false;
-                continue;
+            if (largest != i) {
+                cong_level temp = cars[i];
+                cars[i] = cars[largest];
+                cars[largest] = temp;
+                i = largest;  
             }
-            stringstream ss(l);
-            char vertex;
-            float weight;
-            string token;
-            getline(ss, token, ',');
-            vertex = token[0];
-
-            getline(ss, token, ',');
-            weight = stof(token);
-
-            int v_idx = vertex - 'A';
-            adjacency_list[v_idx]->getHead()->s.set_signal(weight);
-        }
-    }
-    void load_roads() {
-        fstream read("road_network.csv");
-        string l;
-        bool head = true;
-        while (getline(read, l)) {
-            if (head) {
-                head = false;
-                continue;
-            }
-            stringstream ss(l);
-            char vertex, nei;
-            float weight;
-            string token;
-            getline(ss, token, ',');
-            vertex = token[0];
-
-            getline(ss, token, ',');
-            nei = token[0];
-
-            getline(ss, token, ',');
-            weight = stof(token);
-
-            int v_idx = vertex - 'A';
-            int n_idx = nei - 'A';
-
-            adjacency_list[v_idx]->insert(n_idx, weight);
-        }
-    }
-    void findAllPathsUtil(int current, int end, bool* visited, int* path, int& pathIndex,int& w) {
-        visited[current] = true;
-        path[pathIndex] = current;
-        pathIndex++;
-        if (current == end) {
-            printPossiblePaths(path, pathIndex,w);
-        }
-        else {
-            Vertex* neighbor = adjacency_list[current]->getHead();
-            while (neighbor != nullptr) {
-				w += neighbor->weight;
-                if (!visited[neighbor->a]) {
-                    findAllPathsUtil(neighbor->a, end, visited, path, pathIndex,w);
-                }
-                neighbor = neighbor->next;
-            }
-        }
-        pathIndex--;
-        visited[current] = false;
-        w = 0;
-    }
-public:
-    int count_vertex() {
-        fstream read("road_network.csv");
-        string l;
-        bool head = true;
-        char max = ' ';
-        while (getline(read, l)) {
-            if (head) {
-                head = false;
-                continue;
-            }
-
-            stringstream ss(l);
-            char vertex, nei;
-            string token;
-
-            getline(ss, token, ',');
-            vertex = token[0];
-            if (vertex > max) {
-                max = vertex;
-            }
-
-            getline(ss, token, ',');
-            nei = token[0];
-            if (nei > max) {
-                max = nei;
-            }
-
-        }
-        return max % 64;
-    }
-    void signal_adjust() {
-
-    }
-    WeightedGraph() {
-        this->n = count_vertex();
-        adjacency_list = new List * [n];
-        for (int i = 0; i < n; i++) {
-            adjacency_list[i] = new List();
-            adjacency_list[i]->insert(i, 0);
-        }
-        h = new congestion_heap(n);
-        load_roads();
-        load_vehicles();
-        load_signal();
-        for (int i = 0; i < n; i++) {
-            road c(adjacency_list[i]->getHead()->n, adjacency_list[i]->getHead()->cars.no_cars());
-            h->insert_car(c);
-        }
-    }
-    void findAllPaths(char start, char end) {
-        int startIdx = start%65;
-        int endIdx = end%65;
-        if (end < start) {
-            cout << "No possible paths";
-            return;
-        }
-        bool* visited = new bool[n] {false};
-        int* path = new int[n];
-        int pathIndex = 0;
-        int w = 0;
-        findAllPathsUtil(startIdx, endIdx, visited, path, pathIndex,w);
-        delete[] visited;
-        delete[] path;
-    }
-    void display_congestion() {
-        h->display_congestion_levels();
-    }
-    void create_signal() {
-        for (int i = 0; i < n; i++) {
-            int vehicle_no = adjacency_list[i]->getHead()->cars.no_cars();
-            int green = adjacency_list[i]->getHead()->s.get_signal();
-            if (vehicle_no > 3) {
-                adjacency_list[i]->getHead()->s.set_signal(green + 15);
-                green += 15;
-            }
-            Traffic t(vehicle_no, green);
-            signals.add_traffic(t);
-        } 
-        signals.display_traffic();
-    }
-
-    void display() {
-        cout << "Road network\n";
-        for (int i = 0; i < n; i++) {
-            char v = 'A';
-            v += i;
-			//cout << "Green Time: " << adjacency_list[i]->getHead()->s.get_signal() << " seconds\n";
-            cout << "Vertex " << v<< ": ";
-            Vertex* curr = adjacency_list[i]->getHead();
-			cout << "No of cars:" << adjacency_list[i]->getHead()->cars.no_cars() << "\n"; 
-            while (curr != nullptr) {
-                cout << "(" << curr->n << ", " << curr->weight << ") -> ";
-                curr = curr->next;
-            }
-            cout << "\nCars present:\n";
-            curr = adjacency_list[i]->getHead();
-			curr->cars.display_vehicles();
-        }
-        h->display_congestion_levels();
-    }
-    void dijkstra(char start,char end,string &t) {
-        int start_index = start - 'A';
-        float* dist = new float[n];
-        int* prev = new int[n];
-        bool* visited = new bool[n];
-
-        // Initialize distances, predecessors, and visited
-        for (int i = 0; i < n; i++) {
-            dist[i] = INFINITY; // Set initial distances to infinity
-            prev[i] = -1;       // No predecessor
-            visited[i] = false; // Not visited
-        }
-        dist[start_index] = 0; // Distance to the source is zero
-
-        for (int i = 0; i < n; i++) {
-            int u = mindistance(dist, visited); // Get the vertex with the smallest distance
-            if (u == -1) break; // If no vertex is reachable, exit the loop
-            visited[u] = true;
-
-            // Iterate through neighbors of `u`
-            Vertex* neighbor = adjacency_list[u]->getHead()->next;
-            while (neighbor != nullptr) {
-                int v = neighbor->a; // Neighbor vertex
-                float weight = neighbor->weight;
-
-                if (!visited[v] && dist[u] + weight < dist[v]) {
-                    dist[v] = dist[u] + weight;
-                    prev[v] = u;
-                }
-                neighbor = neighbor->next;
-            }
-        }
-
-        // Display the results
-        //cout << "Shortest paths from vertex " << start << " to "<<end<<":\n";
-		printPath(prev, end%65,t);
-        //cout <<":" << dist[end % 65];
-        delete[] dist;
-        delete[] prev;
-        delete[] visited;
-    }
-    ~WeightedGraph() {
-        for (int i = 0; i < n; i++) {
-            Vertex* curr = adjacency_list[i]->getHead();
-            while (curr != nullptr) {
-                Vertex* temp = curr;
-                curr = curr->next;
-                delete temp;
-            }
-            delete adjacency_list[i];
-        }
-        delete[] adjacency_list;
-    }
-};
-class simulation_dashboard {
-    WeightedGraph* g;
-public:
-	simulation_dashboard(){
-		g = new WeightedGraph();
-    }
-    void menu() {
-        while (true) {
-            cout << "City traffic Network Simulation\n";
-            cout << "1.Display road network\n";
-            cout << "2.Display All possible paths\n";
-            cout << "3.Display Traffic signals\n";
-            cout << "4.Display Congestion Levels\n";
-            cout << "5.Exit simulation\n";
-
-            int a;
-            cout << "enter choice";
-            cin>>a;
-            if (a == 1) {
-                g->display();
-               
-            }
-			else if (a == 2) {
-				char st,en;
-                cout << "Enter start and end vertexes";
-                cin >> st;
-                cin >> en;
-				g->findAllPaths(st, en);
-            }
-            else if (a == 3) {
-
-            }
-            else if (a == 4) {
-                g->display_congestion();
-            }
-            else{
+            else {
                 break;
             }
-
         }
     }
+
+    void heapify(int i) {
+        while (i > 1 && cars[i].no_cars > cars[parent(i)].no_cars) {
+            cong_level temp = cars[i];
+            cars[i] = cars[parent(i)];
+            cars[parent(i)] = temp;
+            i = parent(i);
+        }
+    }
+
+public:
+    congestion_heap() {
+        n = 26;  
+        cars = new cong_level[n + 1];  
+        for (int i = 1; i <= n; i++) {
+            cars[i].no_cars = -1;  
+            cars[i].level = ' ';  
+        }
+    }
+    void decrement_top() {
+        cars[1].no_cars=0;
+		heapify_down();
+    }
+    void increment_cars(char s) {
+        for (int i = 1; i <= n; i++) {
+            if (cars[i].level == s) {
+				cars[i].no_cars++;
+                heapify(i);
+
+            }
+        }
+    }
+    void remove_top() {
+		cars[0] = cars[index - 1];
+        cars[index - 1].no_cars = -1;
+        cars[index - 1].level = ' ';
+		heapify_down();
+
+    }
+    void insert_car(char s, int no_cars) {
+        cars[index].no_cars = no_cars;
+		cars[index].level = s;
+        heapify(index);  
+        index++;
+    }
+
+    void display_congestion_levels() {
+        cout << "----------------Congestion levels------------------\n";
+        for (int i = 1; i <= n; i++) {
+            cout << "Intersection point: " << cars[i].level
+                << ", No of cars: " << cars[i].no_cars << "\n";
+        }
+    }
+
+    cong_level get_max_congestion() {
+        return cars[1];  
+    }
 };
-int main() {
-   /* WeightedGraph g;*/
-	//g.create_signal();
- //   g.display();*/
- //   g.findAllPaths('A', 'F');
-    simulation_dashboard s;
-	s.menu();
-    return 0;
-}
