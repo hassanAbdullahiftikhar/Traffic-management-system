@@ -30,25 +30,27 @@ struct vehicles {
 };
 class vehicle_list {
 	vehicles* head;
+	vehicles* tail;
 	int no_of_vehicles;
 public:
 	vehicle_list() {
 		head = nullptr;
 		no_of_vehicles = 0;
+		/*tail = nullptr;*/
+	}
+	vehicles* get_head() {
+		return head;
 	}
 	void add_vehicle(vehicles v) {
 		vehicles* temp = new vehicles(v);
 		if (head == nullptr) {
-			head = temp;
+			head = tail=temp;
 			no_of_vehicles++;
 			return;
 		}
 		else {
-			vehicles* current = head;
-			while (current->next != nullptr) {
-				current = current->next;
-			}
-			current->next = temp;
+			tail->next = temp;
+			tail = temp;
 			no_of_vehicles++;
 			return;
 		}
@@ -57,11 +59,16 @@ public:
 		return no_of_vehicles;
 	}
 	void remove_vehicle(string id) {
-		if (head == nullptr) return;
+		if (head == nullptr) 
+			return; 
 		vehicles* current = head;
 		vehicles* previous = nullptr;
-		if (current != nullptr && current->id == id) {
+
+		if (current->id == id) {
 			head = current->next;
+			if (head == nullptr) { 
+				tail = nullptr;
+			}
 			delete current;
 			no_of_vehicles--;
 			return;
@@ -72,14 +79,25 @@ public:
 		}
 		if (current == nullptr) return;
 		previous->next = current->next;
+		if (current == tail) { 
+			tail = previous;
+		}
 		delete current;
 		no_of_vehicles--;
 	}
+
+
+	bool empty() {
+		return head == nullptr;
+	}
 	void display_vehicles() {
 		vehicles* current = head;
-		while (current != nullptr) {
-			cout << current->st << "-" << current->en << ": " << current->id ;
-			cout << " Vehicle path:" << current->path<<"\n";
+		if (!current) { 
+			cout << "No vehicles present.\n";
+			return;
+		}
+		for (int i = 0; i < no_of_vehicles;i++) { 
+			cout << "Vehicle ID: " << current->id <<",Path:"<<current->path << endl;
 			current = current->next;
 		}
 	}
