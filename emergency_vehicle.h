@@ -108,11 +108,15 @@ public:
 	void print_vehicles()
 	{
 		emergency_node* temp = head;
-
+		if (temp==nullptr)
+		{
+			cout << "\n\t\t->No Vehicle Present\n";
+			return;
+		}
+		cout << '\n';
 		while (temp != nullptr)
 		{
-			cout << temp->start << "-" << temp->end << ": ";
-			cout << temp->id << endl;
+			cout << "\t\t->" << temp->id << endl;// " Vehicle path: " << temp->start << "-" << temp->end << endl;
 			temp = temp->next;
 		}
 	}
