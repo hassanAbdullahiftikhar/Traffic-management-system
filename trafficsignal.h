@@ -19,19 +19,19 @@ public:
 };
 struct Traffic {
 	int vehicles;
-	int time;
+	int ttime;
 	Traffic* next;
 	char c;
 	Traffic() {
 		next = nullptr;
 		vehicles = 0;
-		time = 0;
+		ttime = 0;
 		c = ' ';
 	}
 	Traffic(int v, int t,char n) {
 		next = nullptr;
 		vehicles = v;
-		time = t;
+		ttime = t;
 		c = n;
 
 	}
@@ -75,13 +75,18 @@ public:
 			delete temp;
 		}
 	}
+	Traffic* getHead() {
+		return head;
+	}
 	void display_traffic() {
 		Traffic* current = head;
 		cout << "\n\t\t\t\t\t\t --------------";
 		cout << "\n\t\t\t\t\t\t|Traffic Signal|";
 		cout << "\n\t\t\t\t\t\t --------------\n\n";
 		while (current != nullptr) {
-			cout <<"Vertex:"<<current->c << " ->Traffic: " << current->vehicles << " vehicles, " << current->time << " seconds" << endl;
+			cout <<"Vertex:"<<current->c << " ->Traffic: " << current->vehicles 
+		<< " vehicles, " << current->ttime << " seconds ";
+			cout << endl;
 			current = current->next;
 		}
 	}
