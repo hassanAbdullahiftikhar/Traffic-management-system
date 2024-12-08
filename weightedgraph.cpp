@@ -451,7 +451,6 @@ public:
                 adjacency_list[start]->getHead()->addCar(temp);
             }
             else {
-                cout << "NO possible path for " << id << " exists due to road blockage\n";
                 vehicles temp(st, en, id, t);
                 temp.moving = false;
                 adjacency_list[start]->getHead()->addCar(temp);
@@ -656,15 +655,18 @@ public:
         char v = h->get_max_congestion().level;
         h->decrement_top();
         vehicle_list& s = adjacency_list[v - 'A']->getHead()->cars;
-        signals.dequeue();
-        s.display_vehicles();
         vehicles* curr = s.get_head();
+        vehicle_list temp;
         while (curr != nullptr) {
-            if (curr->path.length() > 2) {
+            if (curr->moving == false) {
+				string dd = curr->path;
+				vehicles c(curr->en, curr->st, curr->id, dd);
+                temp.add_vehicle(c);
+                s.remove_vehicle(curr->id);
+            }
+            else if (curr->path.length() > 2) {
                 string d = curr->path;
                 decrement_path(d);
-                cout << d.length();
-                cout <<d<<endl;
                 string vehicle_id = curr->id;
                 s.remove_vehicle(vehicle_id);
                 vehicles temp;
@@ -682,6 +684,15 @@ public:
             }
             curr = s.get_head();
         }
+        vehicles* cur = temp.get_head();
+        while (cur!=nullptr) {
+            bool n = false;
+			vehicles c(cur->st, cur->en, cur->id, cur->path,n);
+            adjacency_list[v - 'A']->getHead()->addCar(c);
+			h->increment_cars(adjacency_list[v - 'A']->getHead()->n);
+            cur = cur->next;
+        }
+        adjacency_list[v - 'A']->getHead()->cars.display_vehicles();
     }
 
     void display_vehicles() {
@@ -692,8 +703,10 @@ public:
         }
     }
     void create_signal() {
+        signals.empty();
         for (int i = 0; i < n; i++) {
             int vehicle_no = adjacency_list[i]->getHead()->cars.no_cars();
+            cout << adjacency_list[i]->getHead()->n << " cars:" << vehicle_no<<endl;
             int green = adjacency_list[i]->getHead()->s.get_signal();
             if (vehicle_no > 3) {
                 adjacency_list[i]->getHead()->s.set_signal(green + 15);
@@ -703,7 +716,6 @@ public:
             signals.add_traffic(t);
         }
         signals.display_traffic();
-        signals.empty();
     }
 
     void display() const
@@ -848,9 +860,6 @@ public:
 
                 if (adjacency_list[st_index]->find(en))
                     start_vertex->block_roads->insert_at_end(en, status);
-
-                // cout<<"intersecton1:"<<st <<" intersection2:"<<en <<" status:"<<status;
-                 //cout<<endl;
             }
         }
     }
@@ -1014,8 +1023,9 @@ public:
             cout << "\t6-Display Blocked Roads\n";
             cout << "\t7-Enforce a blockade\n";
             cout << "\t8-Clear a blockade\n";
-            cout << "\t9-Emergency Vehicle Routing\n";
-            cout << "\t10-Exit simulation\n";
+            cout << "\t9-Clear a blockade\n";
+            cout << "\t10-Add a vehicle\n";
+            cout << "\t11-Exit simulation\n";
 
             int a;
             cout << "\n\tEnter choice:";
@@ -1086,14 +1096,21 @@ public:
             }
                 else if (a == 10)
                 {
-                    char st, en;
                     string temp;
-                    cout << "Enter Start: ";
-                    cin >> st;
-                    cout << "Enter End: ";
-                    cin >> en;
-                    g->dijkstra(st, en, temp);
-                    cout << temp<< endl;
+                    char start, end;
+                    bool r = true;
+                    cout << "Enter Start and end vertexs";
+                    cin >> start;
+                    cin >> end;
+                    string id;
+                    cout << "Enter name:";
+                    cin >> id;
+                    g->dijkstra(start, end, temp);
+                    if (temp.length() <= 1) {
+                        r = false;
+                    }
+                    vehicles s(start, end, id,temp,r);
+                    g->adjacency_list[start - 'A']->getHead()->addCar(s);
                 }
             else {
                 break;
