@@ -20,6 +20,14 @@ struct vehicles {
 		path = tp;
 		next = nullptr;
 	}
+	vehicles(char s, char e, string i, string tp,bool t) {
+		this->st = s;
+		this->en = e;
+		this->id = i;
+		path = tp;
+		moving = t;
+		next = nullptr;
+	}
 	
 	string& getid() {
 		return id;
@@ -70,37 +78,29 @@ public:
 	}
 	void remove_vehicle(string id) {
 		if (head == nullptr) {
-			return;  // List is empty
+			return;  
 		}
-
-		// Handle if the head node is to be removed
 		if (head->id == id) {
 			vehicles* temp = head;
 			head = head->next;
 			delete temp;
+			no_of_vehicles--;
 			return;
 		}
 
-		// Traverse the list to find the node to be removed
 		vehicles* current = head;
 		while (current->next != nullptr && current->next->id != id) {
 			current = current->next;
 		}
-
-		// If we reached the end of the list without finding the id
 		if (current->next == nullptr) {
 			return;
 		}
-
-		// Remove the node
 		vehicles* temp = current->next;
 		current->next = temp->next;
-
-		// If the removed node was the tail, update the tail pointer
 		if (temp == tail) {
 			tail = current;
 		}
-
+		no_of_vehicles--;
 		delete temp;
 	}
 
