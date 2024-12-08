@@ -556,7 +556,7 @@ public:
     void decrement_path(string& s) {
         string t = "";
         for (int i = 1; i < s.length(); i++) {
-			t += s[i];
+            t += s[i];
         }
         s = t;
     }
@@ -614,14 +614,14 @@ public:
     }
     void reroute_vehicles() {
         for (int i = 0; i < n; i++) {
-			vehicle_list& c = adjacency_list[i]->getHead()->cars;
-			vehicles* curr = c.get_head();
-			while (curr != nullptr) {
+            vehicle_list& c = adjacency_list[i]->getHead()->cars;
+            vehicles* curr = c.get_head();
+            while (curr != nullptr) {
                 if (curr->moving == false) {
                     string t = "";
-					dijkstra(curr->st, curr->en, t);
+                    dijkstra(curr->st, curr->en, t);
                     if (t.length() > 1) {
-                        cout << "Vehicle " << curr->id << "has been rerouted via" << t <<endl;
+                        cout << "Vehicle " << curr->id << "has been rerouted via" << t << endl;
                         curr->path = t;
                         curr->moving = true;
                     }
@@ -659,8 +659,8 @@ public:
         vehicle_list temp;
         while (curr != nullptr) {
             if (curr->moving == false) {
-				string dd = curr->path;
-				vehicles c(curr->en, curr->st, curr->id, dd);
+                string dd = curr->path;
+                vehicles c(curr->en, curr->st, curr->id, dd);
                 temp.add_vehicle(c);
                 s.remove_vehicle(curr->id);
             }
@@ -685,11 +685,11 @@ public:
             curr = s.get_head();
         }
         vehicles* cur = temp.get_head();
-        while (cur!=nullptr) {
+        while (cur != nullptr) {
             bool n = false;
-			vehicles c(cur->st, cur->en, cur->id, cur->path,n);
+            vehicles c(cur->st, cur->en, cur->id, cur->path, n);
             adjacency_list[v - 'A']->getHead()->addCar(c);
-			h->increment_cars(adjacency_list[v - 'A']->getHead()->n);
+            h->increment_cars(adjacency_list[v - 'A']->getHead()->n);
             cur = cur->next;
         }
         adjacency_list[v - 'A']->getHead()->cars.display_vehicles();
@@ -706,7 +706,7 @@ public:
         signals.empty();
         for (int i = 0; i < n; i++) {
             int vehicle_no = adjacency_list[i]->getHead()->cars.no_cars();
-            cout << adjacency_list[i]->getHead()->n << " cars:" << vehicle_no<<endl;
+            cout << adjacency_list[i]->getHead()->n << " cars:" << vehicle_no << endl;
             int green = adjacency_list[i]->getHead()->s.get_signal();
             if (vehicle_no > 3) {
                 adjacency_list[i]->getHead()->s.set_signal(green + 15);
@@ -780,7 +780,7 @@ public:
                 {
                     if (temp->ver_index == adj_node->a)
                     {
-                        if ( !(adjacent_list->getHead()->block_roads->find(adj_node->n)) &&  (temp->distance > (min_distance + adj_node->weight)))
+                        if (!(adjacent_list->getHead()->block_roads->find(adj_node->n)) && (temp->distance > (min_distance + adj_node->weight)))
                         {
                             temp->distance = min_distance + adj_node->weight;
                             predecessor[temp->ver_index] = min_vertex_index;
@@ -1023,7 +1023,7 @@ public:
             cout << "\t6-Display Blocked Roads\n";
             cout << "\t7-Enforce a blockade\n";
             cout << "\t8-Clear a blockade\n";
-            cout << "\t9-Clear a blockade\n";
+            cout << "\t9-Move emergency vehicle\n";
             cout << "\t10-Add a vehicle\n";
             cout << "\t11-Exit simulation\n";
 
@@ -1094,24 +1094,24 @@ public:
                     cout << "\n\tAll Emergency Vehicles Have Reached Their Destination.\n";
                 }
             }
-                else if (a == 10)
-                {
-                    string temp;
-                    char start, end;
-                    bool r = true;
-                    cout << "Enter Start and end vertexs";
-                    cin >> start;
-                    cin >> end;
-                    string id;
-                    cout << "Enter name:";
-                    cin >> id;
-                    g->dijkstra(start, end, temp);
-                    if (temp.length() <= 1) {
-                        r = false;
-                    }
-                    vehicles s(start, end, id,temp,r);
-                    g->adjacency_list[start - 'A']->getHead()->addCar(s);
+            else if (a == 10)
+            {
+                string temp;
+                char start, end;
+                bool r = true;
+                cout << "Enter Start and end vertexs";
+                cin >> start;
+                cin >> end;
+                string id;
+                cout << "Enter name:";
+                cin >> id;
+                g->dijkstra(start, end, temp);
+                if (temp.length() <= 1) {
+                    r = false;
                 }
+                vehicles s(start, end, id, temp, r);
+                g->adjacency_list[start - 'A']->getHead()->addCar(s);
+            }
             else {
                 break;
             }
