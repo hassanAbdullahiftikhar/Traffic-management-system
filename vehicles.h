@@ -6,18 +6,21 @@ struct vehicles {
 	string id;
 	vehicles* next;
 	string path;
+	bool moving = true;
 	vehicles() {
 		st = en = ' ';
-		id = ' ';
-		path = ' ';
+		id = "";
+		path = "";
 		next = nullptr;
 	}
-	vehicles(char s, char e, string i){
+	vehicles(char s, char e, string i,string tp) {
 		this->st = s;
 		this->en = e;
 		this->id = i;
+		path = tp;
 		next = nullptr;
 	}
+	
 	string& getid() {
 		return id;
 	}
@@ -44,7 +47,7 @@ public:
 	void add_vehicle(vehicles v) {
 		vehicles* temp = new vehicles(v);
 		if (head == nullptr) {
-			head = tail=temp;
+			head = tail = temp;
 			no_of_vehicles++;
 			return;
 		}
@@ -55,36 +58,52 @@ public:
 			return;
 		}
 	}
+	void delete_list() {
+		while (head != nullptr) {
+			vehicles* curr = head;
+			head = head->next;     
+			delete curr;        
+		}
+	}
 	int no_cars() {
 		return no_of_vehicles;
 	}
 	void remove_vehicle(string id) {
-		if (head == nullptr) 
-			return; 
-		vehicles* current = head;
-		vehicles* previous = nullptr;
+		if (head == nullptr) {
+			return;  // List is empty
+		}
 
-		if (current->id == id) {
-			head = current->next;
-			if (head == nullptr) { 
-				tail = nullptr;
-			}
-			delete current;
-			no_of_vehicles--;
+		// Handle if the head node is to be removed
+		if (head->id == id) {
+			vehicles* temp = head;
+			head = head->next;
+			delete temp;
 			return;
 		}
-		while (current != nullptr && current->id != id) {
-			previous = current;
+
+		// Traverse the list to find the node to be removed
+		vehicles* current = head;
+		while (current->next != nullptr && current->next->id != id) {
 			current = current->next;
 		}
-		if (current == nullptr) return;
-		previous->next = current->next;
-		if (current == tail) { 
-			tail = previous;
+
+		// If we reached the end of the list without finding the id
+		if (current->next == nullptr) {
+			return;
 		}
-		delete current;
-		no_of_vehicles--;
+
+		// Remove the node
+		vehicles* temp = current->next;
+		current->next = temp->next;
+
+		// If the removed node was the tail, update the tail pointer
+		if (temp == tail) {
+			tail = current;
+		}
+
+		delete temp;
 	}
+
 
 
 	bool empty() {
@@ -92,12 +111,13 @@ public:
 	}
 	void display_vehicles() {
 		vehicles* current = head;
-		if (!current) { 
-			cout << "No vehicles present.\n";
+		if (!current) {
+			cout << "\n\t\t->No Vehicle Present\n";
 			return;
 		}
-		for (int i = 0; i < no_of_vehicles;i++) { 
-			cout << "Vehicle ID: " << current->id <<",Path:"<<current->path << endl;
+		while(current!=nullptr) {
+			cout << "\t\t->Vehicle ID: " << current->id << ",Path:"<<current->path;
+			cout << endl;
 			current = current->next;
 		}
 	}
