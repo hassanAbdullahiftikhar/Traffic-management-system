@@ -112,7 +112,6 @@ public:
 	void display_vehicles() {
 		vehicles* current = head;
 		if (!current) {
-			cout << "\n\t\t->No Vehicle Present\n";
 			return;
 		}
 		while(current!=nullptr) {
