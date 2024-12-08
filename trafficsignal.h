@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 #include<ctime>
 class signal {
 	int s;
@@ -20,15 +21,19 @@ struct Traffic {
 	int vehicles;
 	int time;
 	Traffic* next;
+	char c;
 	Traffic() {
 		next = nullptr;
 		vehicles = 0;
 		time = 0;
+		c = ' ';
 	}
-	Traffic(int v, int t) {
+	Traffic(int v, int t,char n) {
 		next = nullptr;
 		vehicles = v;
 		time = t;
+		c = n;
+
 	}
 };
 class traffic_priority_queue {
@@ -37,9 +42,19 @@ public:
 	traffic_priority_queue() {
 		head = nullptr;
 	}
+	void dequeue() {
+		if (head == nullptr) {
+			return;
+		}
+		else {
+			Traffic* temp = head;
+			head = head->next;
+			delete temp;
+		}
+	}
 	void add_traffic(Traffic t) {
 		Traffic* temp = new Traffic(t);
-		if (head == nullptr || head->vehicles < t.vehicles) { 
+		if (head == nullptr || head->vehicles < t.vehicles) {
 			temp->next = head;
 			head = temp;
 		}
@@ -52,14 +67,25 @@ public:
 			current->next = temp;
 		}
 	}
+	void empty() {
+		Traffic* temp;
+		while (head != nullptr) {
+			temp = head;
+			head = head->next;
+			delete temp;
+		}
+	}
 	void display_traffic() {
 		Traffic* current = head;
+		cout << "\n\t\t\t\t\t\t --------------";
+		cout << "\n\t\t\t\t\t\t|Traffic Signal|";
+		cout << "\n\t\t\t\t\t\t --------------\n\n";
 		while (current != nullptr) {
-			cout << "Traffic: " << current->vehicles << " vehicles, " << current->time << " seconds" << endl;
+			cout <<"Vertex:"<<current->c << " ->Traffic: " << current->vehicles << " vehicles, " << current->time << " seconds" << endl;
 			current = current->next;
 		}
 	}
-		Traffic* get_traffic() {
+	Traffic* get_traffic() {
 		if (head == nullptr) return nullptr;
 		Traffic* temp = head;
 		head = head->next;
